@@ -1,0 +1,1227 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Asesmen - RSUD Pesanggrahan</title>
+  <!-- Library html2canvas untuk export sertifikat ke JPG -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --secondary: #1e293b;
+      --light: #f8fafc;
+      --border: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f1f5f9; color: #334155; line-height: 1.5; }
+
+    header {
+      background-color: var(--secondary);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    header h1 { font-size: 1.4rem; font-weight: 600; }
+    header .sub { font-size: 0.85rem; color: #94a3b8; }
+
+    .nav-btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .nav-btn:hover { background-color: var(--primary-dark); }
+    .nav-btn.logout { background-color: #ef4444; }
+    .nav-btn.logout:hover { background-color: #dc2626; }
+    .nav-btn.secondary { background-color: #0284c7; }
+    .nav-btn.secondary:hover { background-color: #0369a1; }
+
+    .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border: 1px solid var(--border);
+    }
+
+    .card h2 { font-size: 1.2rem; color: var(--secondary); margin-bottom: 1rem; border-bottom: 2px solid var(--light); padding-bottom: 0.5rem; }
+
+    /* Form Styles */
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.3rem; font-weight: 600; font-size: 0.9rem; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+    .form-row { display: flex; gap: 1rem; }
+    .form-row .form-group { flex: 1; }
+
+    /* Login Box */
+    .login-box { max-width: 400px; margin: 4rem auto; }
+
+    /* Section Visibility */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* Badges & Text */
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-success { background-color: #d1fae5; color: #065f46; }
+    .badge-warning { background-color: #fef3c7; color: #92400e; }
+
+    /* Tab navigation in Asesor */
+    .tab-nav { display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .tab-btn {
+      padding: 0.6rem 1rem;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-weight: 600;
+      color: #64748b;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Question Lists */
+    .q-item { background: var(--light); padding: 1rem; border-radius: 6px; margin-bottom: 0.75rem; border: 1px solid var(--border); }
+    .q-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+
+    /* Certificate Layout LANDSCAPE */
+    .cert-preview-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 1rem;
+      overflow-x: auto;
+    }
+    .cert-box {
+      width: 640px;
+      height: 360px;
+      background: #ffffff;
+      border: 10px double var(--secondary);
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      position: relative;
+    }
+    .cert-header { font-size: 1.1rem; font-weight: 700; color: var(--secondary); text-transform: uppercase; letter-spacing: 1.5px; }
+    .cert-body { margin: auto 0; }
+    .cert-name { font-size: 1.4rem; font-weight: 800; color: var(--primary-dark); text-decoration: underline; margin: 0.3rem 0; }
+    .cert-level { font-size: 1rem; font-weight: 700; color: var(--secondary); margin-bottom: 0.4rem; }
+    .cert-status { font-size: 0.9rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 4px; display: inline-block; margin-top: 0.2rem; }
+    .cert-status.kompeten { background-color: #d1fae5; color: #065f46; }
+    .cert-status.tdk-kompeten { background-color: #fee2e2; color: #991b1b; }
+    .cert-footer { text-align: right; font-size: 0.8rem; margin-top: 0.5rem; }
+    .cert-sig-space { height: 35px; margin: 0.1rem 0; }
+
+    /* Action Buttons */
+    .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.8rem; }
+    .btn-danger { background-color: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; }
+
+    /* Table styles */
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.9rem; }
+    .data-table th, .data-table td { border: 1px solid var(--border); padding: 0.5rem; text-align: left; }
+    .data-table th { background-color: var(--light); color: var(--secondary); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>E-Asesmen</h1>
+      <div class="sub">RSUD Pesanggrahan - Sistem Ujian Perawat & Bidan</div>
+    </div>
+    <div id="header-actions">
+      <button class="nav-btn" onclick="showPage('login-page')">Login Asesor</button>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- PAGE 1: FORM PESERTA (DEFAULT DISPLAY) -->
+    <div id="peserta-page" class="page active">
+      <div class="card">
+        <h2>Form Biodata Peserta Asesmen</h2>
+        <form id="form-biodata" onsubmit="startAssessment(event)">
+          
+          <div class="form-group" style="background: #e2e8f0; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; border-left: 4px solid var(--primary-dark);">
+            <label style="color: var(--secondary); font-size: 1rem;">🔑 Kode Unik Akses Ujian (5 Angka) *</label>
+            <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">Dapatkan 5 angka kode unik ini langsung dari Asesor penguji Anda.</p>
+            <input type="text" id="p-kode-unik" required maxlength="5" placeholder="Contoh: 83921" style="font-size: 1.2rem; font-weight: bold; letter-spacing: 2px; text-align: center;">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nama Lengkap *</label>
+              <input type="text" id="p-nama" required placeholder="Nama lengkap beserta gelar">
+            </div>
+            <div class="form-group">
+              <label>Tanggal Lahir *</label>
+              <input type="date" id="p-tgl" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>NIP / NIK *</label>
+              <input type="text" id="p-nip" required placeholder="Nomor Induk Pegawai">
+            </div>
+            <div class="form-group">
+              <label>Jenis Kelamin *</label>
+              <select id="p-jk" required>
+                <option value="">-- Pilih --</option>
+                <option value="Laki-laki">Laki-laki</option>
+                <option value="Perempuan">Perempuan</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email *</label>
+              <input type="email" id="p-email" required placeholder="alamat@email.com">
+            </div>
+            <div class="form-group">
+              <label>Nama Asesor Penguji *</label>
+              <input type="text" id="p-asesor" required placeholder="Nama Asesor">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Pilihan Ujian / Tingkat Kompetensi *</label>
+            <select id="p-ujian" required onchange="renderSoalPeserta()">
+              <!-- Dinamis -->
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-top: 1rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal;">
+              <input type="checkbox" id="p-setuju" required style="width: auto;">
+              Saya menyetujui untuk mengikuti proses asesmen kompetensi ini secara sadar dan jujur.
+            </label>
+          </div>
+
+          <button type="submit" class="nav-btn" style="width: 100%; padding: 0.8rem; margin-top: 1rem;">Mulai Kerjakan Ujian</button>
+        </form>
+      </div>
+
+      <!-- TEMPAT SOAL DIKERJAKAN PESERTA -->
+      <div id="p-soal-section" class="card" style="display: none;">
+        <h2>Lembar Ujian Asesmen</h2>
+        <form id="form-ujian" onsubmit="submitJawabanPeserta(event)">
+          
+          <div id="p-soal-esai-container">
+            <h3 style="margin-bottom: 0.5rem; color: var(--primary-dark);">A. Soal Esai</h3>
+            <div id="list-soal-esai-peserta"></div>
+          </div>
+
+          <div id="p-soal-lisan-container" style="margin-top: 1.5rem;">
+            <h3 style="margin-bottom: 0.5rem; color: var(--primary-dark);">B. Soal Lisan</h3>
+            <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.5rem;">* Pertanyaan lisan akan diberikan/dikonfirmasi langsung oleh Asesor.</p>
+            <div id="list-soal-lisan-peserta"></div>
+          </div>
+
+          <div id="p-soal-obs-container" style="margin-top: 1.5rem;">
+            <h3 style="margin-bottom: 0.5rem; color: var(--primary-dark);">C. Soal Observasi & Kesesuaian SOP Action</h3>
+            <div id="list-soal-obs-peserta"></div>
+          </div>
+
+          <button type="submit" class="nav-btn" style="width: 100%; padding: 0.8rem; margin-top: 2rem; background-color: var(--secondary);">Selesaikan & Simpan Jawaban</button>
+        </form>
+      </div>
+
+      <!-- HASIL / NILAI AKHIR PESERTA -->
+      <div id="p-hasil-section" class="card" style="display: none;">
+        <h2>Hasil Asesmen Kompetensi</h2>
+        <div id="p-hasil-content"></div>
+      </div>
+    </div>
+
+    <!-- LOGIN ASESOR PAGE -->
+    <div id="login-page" class="page">
+      <div class="card login-box">
+        <h2>Akses khusus Asesor</h2>
+        <form onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label>ID Tampilan 1 (Asesor)</label>
+            <input type="text" id="login-id" required placeholder="Asesor Pesanggrahan" value="Asesor Pesanggrahan">
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-pass" required placeholder="******" value="19011997">
+          </div>
+          <button type="submit" class="nav-btn" style="width: 100%;">Masuk Tampilan Asesor</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- PAGE 2: DASHBOARD ASESOR -->
+    <div id="asesor-page" class="page">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+          <h2>Panel Asesor Penguji</h2>
+          <div>
+            <button class="nav-btn secondary btn-sm" onclick="downloadExcelReport()">📥 Download Data Excel (CSV)</button>
+            <span class="badge badge-success" style="margin-left: 5px;">Sistem Aktif</span>
+          </div>
+        </div>
+        <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+          Penyimpanan Data Terhubung: 
+          <a href="https://drive.google.com/drive/folders/1ehJTMHKsXYU2L01tAYRP1DUP2BGl72gL?usp=drive_link" target="_blank" style="color: var(--primary); font-weight: 600;">
+            Folder Google Drive Asesor
+          </a>
+        </p>
+      </div>
+
+      <!-- TAB NAVIGATION ASESOR -->
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('tab-soal')">Kelola Soal & Kategori PK/BK</button>
+        <button class="tab-btn" onclick="switchTab('tab-penilaian')">Penilaian & Riwayat Peserta</button>
+        <button class="tab-btn" onclick="switchTab('tab-sertifikat')">Penerbitan & Download Sertifikat</button>
+        <button class="tab-btn" onclick="switchTab('tab-pengaturan')">Pengaturan Ujian & Kode Unik</button>
+      </div>
+
+      <!-- TAB 1: EDIT SOAL & KUNCI JAWABAN (DENGAN KATEGORI PK/BK) -->
+      <div id="tab-soal" class="tab-content active">
+        <!-- Edit Esai -->
+        <div class="card">
+          <h2>1. Kelola Soal Esai & Target Jenjang</h2>
+          <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+              <label>Tingkatan PK / BK *</label>
+              <select id="edit-esai-jenjang">
+                <!-- Diisi dinamis -->
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label>Bobot / Poin Maks *</label>
+              <input type="number" id="edit-esai-p" value="35" min="1" placeholder="Poin maks">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Pertanyaan Esai Baru</label>
+            <textarea id="edit-esai-q" rows="2" placeholder="Masukkan pertanyaan esai..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Kunci Jawaban Esai (Hanya terlihat di Panel Asesor)</label>
+            <textarea id="edit-esai-k" rows="2" placeholder="Kunci jawaban atau standar jawaban..."></textarea>
+          </div>
+          <button class="nav-btn btn-sm" onclick="addSoal('esai')">+ Tambah Soal Esai</button>
+
+          <div style="margin-top: 1rem;" id="list-edit-esai"></div>
+        </div>
+
+        <!-- Edit Lisan -->
+        <div class="card">
+          <h2>2. Kelola Soal Lisan & Target Jenjang</h2>
+          <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+              <label>Tingkatan PK / BK *</label>
+              <select id="edit-lisan-jenjang">
+                <!-- Diisi dinamis -->
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label>Bobot / Poin Maks *</label>
+              <input type="number" id="edit-lisan-p" value="30" min="1" placeholder="Poin maks">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Pertanyaan Lisan Baru</label>
+            <textarea id="edit-lisan-q" rows="2" placeholder="Masukkan pertanyaan lisan..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Kunci Jawaban / Panduan Jawaban Lisan (Hanya untuk Asesor)</label>
+            <textarea id="edit-lisan-k" rows="2" placeholder="Poin-poin jawaban yang diharapkan..."></textarea>
+          </div>
+          <button class="nav-btn btn-sm" onclick="addSoal('lisan')">+ Tambah Soal Lisan</button>
+
+          <div style="margin-top: 1rem;" id="list-edit-lisan"></div>
+        </div>
+
+        <!-- Edit Observasi & SOP -->
+        <div class="card">
+          <h2>3. Kelola Soal Observasi & Kesesuaian SOP Tindakan</h2>
+          <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+              <label>Tingkatan PK / BK *</label>
+              <select id="edit-obs-jenjang">
+                <!-- Diisi dinamis -->
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label>Bobot / Poin Maks *</label>
+              <input type="number" id="edit-obs-p" value="35" min="1" placeholder="Poin maks">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Item Tindakan SOP / Observasi</label>
+            <input type="text" id="edit-obs-q" placeholder="Contoh: Pemasangan Infus Sesuai SOP">
+          </div>
+          <div class="form-group">
+            <label>Ceklis Kesesuaian SOP / Standar Prosedur (Kunci Jawaban Asesor)</label>
+            <textarea id="edit-obs-k" rows="2" placeholder="Langkah-langkah krusial SOP yang wajib dipenuhi..."></textarea>
+          </div>
+          <button class="nav-btn btn-sm" onclick="addSoal('obs')">+ Tambah Item SOP</button>
+
+          <div style="margin-top: 1rem;" id="list-edit-obs"></div>
+        </div>
+      </div>
+
+      <!-- TAB 2: PENILAIAN & RIWAYAT PESERTA -->
+      <div id="tab-penilaian" class="tab-content">
+        <div class="card">
+          <h2>Evaluasi & Penilaian Peserta Aktif</h2>
+          <div id="asesor-eval-container">
+            <p style="color: #64748b;">Belum ada peserta yang sedang/baru mengerjakan ujian.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Riwayat Data Peserta Tersimpan (LocalStorage)</h2>
+          <div style="overflow-x: auto;">
+            <table class="data-table" id="table-riwayat-peserta">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Nama</th>
+                  <th>NIP</th>
+                  <th>Jenjang</th>
+                  <th>Asesor</th>
+                  <th>Nilai</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="riwayat-tbody">
+                <tr><td colspan="8" style="text-align: center; color: #64748b;">Belum ada riwayat tersimpan.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: PENERBITAN & DOWNLOAD SERTIFIKAT -->
+      <div id="tab-sertifikat" class="tab-content">
+        <div class="card">
+          <h2>Desain & Terbitkan Sertifikat Kompetensi</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nama Direktur RSUD Pesanggrahan</label>
+              <input type="text" id="cert-direktur" value="dr. Nama Direktur, MARS" oninput="updateCertPreview()">
+            </div>
+            <div class="form-group">
+              <label>Tanggal Penerbitan Sertifikat</label>
+              <input type="date" id="cert-tgl" onchange="updateCertPreview()">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Pilih Peserta untuk Diterbitkan Sertifikat</label>
+            <select id="cert-select-peserta" onchange="updateCertPreview()">
+              <option value="">-- Pilih Peserta --</option>
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="nav-btn" onclick="simpanSertifikatToDrive()">Simpan ke Google Drive Asesor</button>
+            <button class="nav-btn secondary" onclick="downloadSertifikatJPG()">📥 Download Sertifikat (JPG)</button>
+          </div>
+        </div>
+
+        <!-- PREVIEW SERTIFIKAT LANDSCAPE -->
+        <div class="card">
+          <h2>Preview Sertifikat (Format Landscape 16:9)</h2>
+          <div class="cert-preview-container">
+            <div class="cert-box" id="cert-printable">
+              
+              <!-- NOMOR SURAT MANUAL (KANAN ATAS) -->
+              <div style="text-align: right; font-size: 0.8rem; font-weight: 600; color: var(--secondary); margin-bottom: -0.5rem;">
+                No : ......................
+              </div>
+
+              <div class="cert-header">
+                <h3>RSUD PESANGGRAHAN</h3>
+                <p style="font-size: 0.75rem; font-weight: normal; margin-top: 2px;">SURAT KETERANGAN KOMPETENSI</p>
+              </div>
+
+              <div class="cert-body">
+                <p style="font-size: 0.8rem;">Diberikan Kepada:</p>
+                <div class="cert-name" id="cert-p-name">[ NAMA PESERTA ]</div>
+                <div class="cert-level" id="cert-p-level">[ JENJANG KOMPETENSI: PK / BK ]</div>
+                <p style="font-size: 0.8rem;">Atas Uji Asesmen Kompetensi dengan hasil dinyatakan:</p>
+                <div>
+                  <span class="cert-status kompeten" id="cert-p-status">KOMPETEN</span>
+                </div>
+              </div>
+
+              <div class="cert-footer">
+                <p>Jakarta, <span id="cert-p-tgl">-</span></p>
+                <p style="margin-top: 2px;">Direktur RSUD Pesanggrahan</p>
+                <div class="cert-sig-space"></div>
+                <p style="font-weight: 700; text-decoration: underline;" id="cert-p-dir">dr. Nama Direktur, MARS</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: PENGATURAN UJIAN -->
+      <div id="tab-pengaturan" class="tab-content">
+        <!-- GENERATOR KODE UNIK 5 ANGKA -->
+        <div class="card" style="border-left: 4px solid var(--primary);">
+          <h2>Generator Kode Unik Akses Ujian (5 Angka)</h2>
+          <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem;">Peserta wajib memasukkan kode unik 5 angka ini pada form biodata mereka sebelum dapat memulai ujian.</p>
+          <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+            <div id="display-kode-unik" style="font-size: 2rem; font-weight: bold; background: var(--light); padding: 0.5rem 1.5rem; border: 2px dashed var(--primary); border-radius: 6px; letter-spacing: 4px; color: var(--primary-dark);">-----</div>
+            <button class="nav-btn" onclick="generateUniqueCode()">🔄 Generate Kode Unik Baru</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Kustomisasi Pilihan Ujian (PK & BK)</h2>
+          <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem;">Ubah pilihan Perawat Klinis (PK) & Bidan Klinis (BK) yang akan ditampilkan pada Form Peserta.</p>
+          
+          <div id="list-opsi-ujian"></div>
+
+          <div class="form-row" style="margin-top: 1rem;">
+            <div class="form-group">
+              <input type="text" id="new-opsi-ujian" placeholder="Contoh: PK 4 / BK Specialis">
+            </div>
+            <div>
+              <button class="nav-btn" onclick="addOpsiUjian()">Tambah Opsi Ujian</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1ehJTMHKsXYU2L01tAYRP1DUP2BGl72gL?usp=drive_link";
+
+    let appData = {
+      activeUniqueCode: "",
+      opsiUjian: [
+        "Perawat Klinis 1 (PK 1)",
+        "Perawat Klinis 2 (PK 2)",
+        "Perawat Klinis 3 (PK 3)",
+        "Bidan Klinis 1 (BK 1)",
+        "Bidan Klinis 2 (BK 2)",
+        "Bidan Klinis 3 (BK 3)"
+      ],
+      soalEsai: [
+        { id: 1, jenjang: "Perawat Klinis 1 (PK 1)", q: "Jelaskan langkah-langkah triase pada pasien gawat darurat!", k: "Airway, Breathing, Circulation, Disability, Exposure.", poin: 35 }
+      ],
+      soalLisan: [
+        { id: 1, jenjang: "Perawat Klinis 1 (PK 1)", q: "Sebutkan 6 langkah cuci tangan menurut WHO!", k: "Ratakan sabun, punggung tangan, sela jari, kunci jari, putar ibu jari, usap ujung jari.", poin: 30 }
+      ],
+      soalObs: [
+        { id: 1, jenjang: "Perawat Klinis 1 (PK 1)", q: "Prosedur Pemasangan Kateter Urine Sesuai SOP", k: "Sterilitas dijaga, penjelasan ke pasien, cek balon kateter, fiksasi.", poin: 35 }
+      ],
+      currentPeserta: null,
+      jawabanPeserta: null,
+      nilaiAkhir: null,
+      riwayatPeserta: [],
+      configSertifikat: {
+        direktur: "dr. Nama Direktur, MARS",
+        tanggal: new Date().toISOString().slice(0,10),
+        selectedPesertaIdx: ""
+      }
+    };
+
+    // Load from LocalStorage if available
+    function loadLocalStorage() {
+      const savedData = localStorage.getItem('e_asesmen_pesanggrahan_data');
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          if (parsed.activeUniqueCode) appData.activeUniqueCode = parsed.activeUniqueCode;
+          if (parsed.opsiUjian) appData.opsiUjian = parsed.opsiUjian;
+          if (parsed.soalEsai) appData.soalEsai = parsed.soalEsai;
+          if (parsed.soalLisan) appData.soalLisan = parsed.soalLisan;
+          if (parsed.soalObs) appData.soalObs = parsed.soalObs;
+          if (parsed.riwayatPeserta) appData.riwayatPeserta = parsed.riwayatPeserta;
+          if (parsed.configSertifikat) appData.configSertifikat = parsed.configSertifikat;
+        } catch(e) {
+          console.error("Gagal parsing local storage", e);
+        }
+      }
+    }
+
+    function saveLocalStorage() {
+      // Perbarui konfigurasi sertifikat dari input form sebelum disimpan
+      appData.configSertifikat.direktur = document.getElementById('cert-direktur').value;
+      appData.configSertifikat.tanggal = document.getElementById('cert-tgl').value;
+      appData.configSertifikat.selectedPesertaIdx = document.getElementById('cert-select-peserta').value;
+
+      localStorage.setItem('e_asesmen_pesanggrahan_data', JSON.stringify({
+        activeUniqueCode: appData.activeUniqueCode,
+        opsiUjian: appData.opsiUjian,
+        soalEsai: appData.soalEsai,
+        soalLisan: appData.soalLisan,
+        soalObs: appData.soalObs,
+        riwayatPeserta: appData.riwayatPeserta,
+        configSertifikat: appData.configSertifikat
+      }));
+    }
+
+    function generateUniqueCode() {
+      // Generate 5 digit random number string
+      const code = Math.floor(10000 + Math.random() * 90000).toString();
+      appData.activeUniqueCode = code;
+      saveLocalStorage();
+      renderUniqueCodeDisplay();
+      alert(`Kode unik ujian berhasil digenerate: ${code}\nBerikan kode ini kepada peserta untuk memulai ujian.`);
+    }
+
+    function renderUniqueCodeDisplay() {
+      const el = document.getElementById('display-kode-unik');
+      if(el) {
+        el.innerText = appData.activeUniqueCode ? appData.activeUniqueCode : "-----";
+      }
+    }
+
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+
+      const headerActions = document.getElementById('header-actions');
+      if (pageId === 'asesor-page') {
+        headerActions.innerHTML = `<button class="nav-btn logout" onclick="logoutAsesor()">Keluar Asesor</button>`;
+      } else {
+        headerActions.innerHTML = `<button class="nav-btn" onclick="showPage('login-page')">Login Asesor</button>`;
+      }
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const id = document.getElementById('login-id').value;
+      const pass = document.getElementById('login-pass').value;
+
+      if (id === 'Asesor Pesanggrahan' && pass === '19011997') {
+        showPage('asesor-page');
+        renderAllAsesorViews();
+        renderRiwayatTable();
+        populateCertDropdown();
+        renderUniqueCodeDisplay();
+      } else {
+        alert('ID atau Password Asesor Salah!');
+      }
+    }
+
+    function logoutAsesor() {
+      showPage('peserta-page');
+    }
+
+    function initApp() {
+      loadLocalStorage();
+      renderOpsiUjian();
+      renderJenjangDropdowns();
+      renderUniqueCodeDisplay();
+      
+      // Isi form sertifikat dari LocalStorage jika ada
+      document.getElementById('cert-direktur').value = appData.configSertifikat.direktur || "dr. Nama Direktur, MARS";
+      if (appData.configSertifikat.tanggal) {
+        document.getElementById('cert-tgl').value = appData.configSertifikat.tanggal;
+      } else {
+        document.getElementById('cert-tgl').valueAsDate = new Date();
+      }
+
+      renderRiwayatTable();
+      populateCertDropdown();
+    }
+
+    function renderOpsiUjian() {
+      const select = document.getElementById('p-ujian');
+      select.innerHTML = '<option value="">-- Pilih Tingkat Kompetensi --</option>';
+      appData.opsiUjian.forEach(opsi => {
+        select.innerHTML += `<option value="${opsi}">${opsi}</option>`;
+      });
+
+      const listDiv = document.getElementById('list-opsi-ujian');
+      if(listDiv) {
+        listDiv.innerHTML = '';
+        appData.opsiUjian.forEach((opsi, idx) => {
+          listDiv.innerHTML += `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:var(--light); padding:0.5rem 1rem; margin-bottom:0.4rem; border-radius:4px;">
+              <span>${opsi}</span>
+              <button class="btn-danger btn-sm" onclick="deleteOpsiUjian(${idx})">Hapus</button>
+            </div>
+          `;
+        });
+      }
+      renderJenjangDropdowns();
+    }
+
+    function renderJenjangDropdowns() {
+      ['edit-esai-jenjang', 'edit-lisan-jenjang', 'edit-obs-jenjang'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+          el.innerHTML = appData.opsiUjian.map(o => `<option value="${o}">${o}</option>`).join('');
+        }
+      });
+    }
+
+    function addOpsiUjian() {
+      const val = document.getElementById('new-opsi-ujian').value;
+      if (val) {
+        appData.opsiUjian.push(val);
+        document.getElementById('new-opsi-ujian').value = '';
+        renderOpsiUjian();
+        saveLocalStorage();
+      }
+    }
+
+    function deleteOpsiUjian(idx) {
+      appData.opsiUjian.splice(idx, 1);
+      renderOpsiUjian();
+      saveLocalStorage();
+    }
+
+    function addSoal(type) {
+      if (type === 'esai') {
+        const jenjang = document.getElementById('edit-esai-jenjang').value;
+        const q = document.getElementById('edit-esai-q').value;
+        const k = document.getElementById('edit-esai-k').value;
+        const p = parseInt(document.getElementById('edit-esai-p').value) || 0;
+        if(q) {
+          appData.soalEsai.push({ id: Date.now(), jenjang, q, k, poin: p });
+          document.getElementById('edit-esai-q').value = '';
+          document.getElementById('edit-esai-k').value = '';
+        }
+      } else if (type === 'lisan') {
+        const jenjang = document.getElementById('edit-lisan-jenjang').value;
+        const q = document.getElementById('edit-lisan-q').value;
+        const k = document.getElementById('edit-lisan-k').value;
+        const p = parseInt(document.getElementById('edit-lisan-p').value) || 0;
+        if(q) {
+          appData.soalLisan.push({ id: Date.now(), jenjang, q, k, poin: p });
+          document.getElementById('edit-lisan-q').value = '';
+          document.getElementById('edit-lisan-k').value = '';
+        }
+      } else if (type === 'obs') {
+        const jenjang = document.getElementById('edit-obs-jenjang').value;
+        const q = document.getElementById('edit-obs-q').value;
+        const k = document.getElementById('edit-obs-k').value;
+        const p = parseInt(document.getElementById('edit-obs-p').value) || 0;
+        if(q) {
+          appData.soalObs.push({ id: Date.now(), jenjang, q, k, poin: p });
+          document.getElementById('edit-obs-q').value = '';
+          document.getElementById('edit-obs-k').value = '';
+        }
+      }
+      renderAllAsesorViews();
+      renderSoalPeserta();
+      saveLocalStorage();
+    }
+
+    function deleteSoal(type, id) {
+      if (type === 'esai') appData.soalEsai = appData.soalEsai.filter(s => s.id !== id);
+      if (type === 'lisan') appData.soalLisan = appData.soalLisan.filter(s => s.id !== id);
+      if (type === 'obs') appData.soalObs = appData.soalObs.filter(s => s.id !== id);
+      renderAllAsesorViews();
+      renderSoalPeserta();
+      saveLocalStorage();
+    }
+
+    function renderAllAsesorViews() {
+      const divEsai = document.getElementById('list-edit-esai');
+      if(divEsai) {
+        divEsai.innerHTML = appData.soalEsai.map((s, i) => `
+          <div class="q-item">
+            <div class="q-item-header">
+              <strong>[${s.jenjang}] Esai #${i+1} (Bobot: ${s.poin} Poin)</strong> 
+              <button class="btn-danger btn-sm" onclick="deleteSoal('esai', ${s.id})">Hapus</button>
+            </div>
+            <p><strong>Soal:</strong> ${s.q}</p>
+            <p style="color:#059669;"><strong>Kunci Jawaban:</strong> ${s.k}</p>
+          </div>
+        `).join('');
+      }
+
+      const divLisan = document.getElementById('list-edit-lisan');
+      if(divLisan) {
+        divLisan.innerHTML = appData.soalLisan.map((s, i) => `
+          <div class="q-item">
+            <div class="q-item-header">
+              <strong>[${s.jenjang}] Lisan #${i+1} (Bobot: ${s.poin} Poin)</strong> 
+              <button class="btn-danger btn-sm" onclick="deleteSoal('lisan', ${s.id})">Hapus</button>
+            </div>
+            <p><strong>Pertanyaan:</strong> ${s.q}</p>
+            <p style="color:#059669;"><strong>Panduan Kunci Jawaban:</strong> ${s.k}</p>
+          </div>
+        `).join('');
+      }
+
+      const divObs = document.getElementById('list-edit-obs');
+      if(divObs) {
+        divObs.innerHTML = appData.soalObs.map((s, i) => `
+          <div class="q-item">
+            <div class="q-item-header">
+              <strong>[${s.jenjang}] SOP / Observasi #${i+1} (Bobot: ${s.poin} Poin)</strong> 
+              <button class="btn-danger btn-sm" onclick="deleteSoal('obs', ${s.id})">Hapus</button>
+            </div>
+            <p><strong>Item Tindakan:</strong> ${s.q}</p>
+            <p style="color:#059669;"><strong>Ceklis Kesesuaian SOP:</strong> ${s.k}</p>
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderSoalPeserta() {
+      const selectedJenjang = document.getElementById('p-ujian').value;
+
+      const containerEsai = document.getElementById('list-soal-esai-peserta');
+      const filteredEsai = appData.soalEsai.filter(s => s.jenjang === selectedJenjang);
+      containerEsai.innerHTML = filteredEsai.length > 0 ? filteredEsai.map((s, i) => `
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label>${i+1}. ${s.q}</label>
+          <textarea id="ans-esai-${s.id}" rows="3" required placeholder="Tuliskan jawaban Anda..."></textarea>
+        </div>
+      `).join('') : '<p style="color: #64748b; font-style: italic;">Tidak ada soal esai untuk jenjang ini.</p>';
+
+      const containerLisan = document.getElementById('list-soal-lisan-peserta');
+      const filteredLisan = appData.soalLisan.filter(s => s.jenjang === selectedJenjang);
+      containerLisan.innerHTML = filteredLisan.length > 0 ? filteredLisan.map((s, i) => `
+        <div class="q-item">
+          <p><strong>${i+1}. ${s.q}</strong></p>
+        </div>
+      `).join('') : '<p style="color: #64748b; font-style: italic;">Tidak ada soal lisan untuk jenjang ini.</p>';
+
+      const containerObs = document.getElementById('list-soal-obs-peserta');
+      const filteredObs = appData.soalObs.filter(s => s.jenjang === selectedJenjang);
+      containerObs.innerHTML = filteredObs.length > 0 ? filteredObs.map((s, i) => `
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label>${i+1}. ${s.q}</label>
+          <textarea id="ans-obs-${s.id}" rows="2" placeholder="Catatan pelaksanaan / konfirmasi tindakan..."></textarea>
+        </div>
+      `).join('') : '<p style="color: #64748b; font-style: italic;">Tidak ada soal observasi untuk jenjang ini.</p>';
+    }
+
+    function startAssessment(e) {
+      e.preventDefault();
+      
+      const inputKodeUnik = document.getElementById('p-kode-unik').value.trim();
+
+      // Validasi kode unik
+      if (!appData.activeUniqueCode) {
+        alert('Asesor belum men-generate kode unik ujian! Silakan hubungi asesor penguji Anda.');
+        return;
+      }
+      if (inputKodeUnik !== appData.activeUniqueCode) {
+        alert('Kode unik akses ujian salah! Pastikan Anda memasukkan 5 angka yang benar dari asesor.');
+        return;
+      }
+
+      appData.currentPeserta = {
+        nama: document.getElementById('p-nama').value,
+        tgl: document.getElementById('p-tgl').value,
+        nip: document.getElementById('p-nip').value,
+        jk: document.getElementById('p-jk').value,
+        email: document.getElementById('p-email').value,
+        asesor: document.getElementById('p-asesor').value,
+        ujian: document.getElementById('p-ujian').value
+      };
+
+      document.getElementById('form-biodata').parentElement.style.display = 'none';
+      document.getElementById('p-soal-section').style.display = 'block';
+    }
+
+    function submitJawabanPeserta(e) {
+      e.preventDefault();
+      
+      let jawaban = { esai: {}, obs: {} };
+      const selectedJenjang = appData.currentPeserta.ujian;
+
+      appData.soalEsai.filter(s => s.jenjang === selectedJenjang).forEach(s => {
+        jawaban.esai[s.id] = document.getElementById(`ans-esai-${s.id}`).value;
+      });
+      appData.soalObs.filter(s => s.jenjang === selectedJenjang).forEach(s => {
+        jawaban.obs[s.id] = document.getElementById(`ans-obs-${s.id}`).value;
+      });
+
+      appData.jawabanPeserta = jawaban;
+
+      document.getElementById('p-soal-section').style.display = 'none';
+      document.getElementById('p-hasil-section').style.display = 'block';
+
+      document.getElementById('p-hasil-content').innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+          <h3 style="color: var(--primary-dark);">Jawaban Ujian Berhasil Dikirimkan!</h3>
+          <p style="margin-top: 0.5rem;">Terima kasih <strong>${appData.currentPeserta.nama}</strong>. Asesor (${appData.currentPeserta.asesor}) sedang melakukan verifikasi dan penilaian akhir.</p>
+          <span class="badge badge-warning" style="margin-top: 1rem; font-size: 0.9rem;">Status: Menunggu Penilaian Asesor</span>
+        </div>
+      `;
+
+      updateAsesorEvaluationPanel();
+    }
+
+    function hitungTotalNilai() {
+      let total = 0;
+      const selectedJenjang = appData.currentPeserta.ujian;
+
+      appData.soalEsai.filter(s => s.jenjang === selectedJenjang).forEach(s => {
+        const val = parseInt(document.getElementById(`score-esai-${s.id}`)?.value) || 0;
+        total += val;
+      });
+      appData.soalLisan.filter(s => s.jenjang === selectedJenjang).forEach(s => {
+        const val = parseInt(document.getElementById(`score-lisan-${s.id}`)?.value) || 0;
+        total += val;
+      });
+      appData.soalObs.filter(s => s.jenjang === selectedJenjang).forEach(s => {
+        const val = parseInt(document.getElementById(`score-obs-${s.id}`)?.value) || 0;
+        total += val;
+      });
+      document.getElementById('eval-nilai-total').value = total;
+    }
+
+    function updateAsesorEvaluationPanel() {
+      const container = document.getElementById('asesor-eval-container');
+      if (!appData.currentPeserta || !appData.jawabanPeserta) {
+        container.innerHTML = `<p style="color: #64748b;">Belum ada peserta yang sedang/baru mengerjakan ujian.</p>`;
+        return;
+      }
+
+      const p = appData.currentPeserta;
+      let html = `
+        <div class="q-item">
+          <h3>Peserta: ${p.nama} (${p.ujian})</h3>
+          <p>NIP: ${p.nip} | Gender: ${p.jk} | Email: ${p.email}</p>
+        </div>
+        <form onsubmit="simpanNilaiAkhir(event)">
+          <h4 style="margin: 1rem 0 0.5rem 0; color: var(--primary-dark);">1. Penilaian Soal Esai:</h4>
+      `;
+
+      appData.soalEsai.filter(s => s.jenjang === p.ujian).forEach((s, i) => {
+        const ans = appData.jawabanPeserta.esai[s.id] || '-';
+        html += `
+          <div class="q-item">
+            <p><strong>Soal Esai #${i+1}:</strong> ${s.q}</p>
+            <p style="color: #1e293b; margin: 0.3rem 0;"><strong>Jawaban Peserta:</strong> ${ans}</p>
+            <p style="color: #059669; font-size: 0.85rem; margin-bottom: 0.5rem;"><strong>Kunci Jawaban:</strong> ${s.k}</p>
+            <div class="form-group" style="max-width: 200px; margin-bottom:0;">
+              <label style="font-size: 0.8rem;">Poin Nilai (Maks: ${s.poin}):</label>
+              <input type="number" id="score-esai-${s.id}" min="0" max="${s.poin}" value="0" required oninput="hitungTotalNilai()">
+            </div>
+          </div>
+        `;
+      });
+
+      html += `<h4 style="margin: 1rem 0 0.5rem 0; color: var(--primary-dark);">2. Penilaian & Catatan Ujian Lisan:</h4>`;
+
+      appData.soalLisan.filter(s => s.jenjang === p.ujian).forEach((s, i) => {
+        html += `
+          <div class="q-item">
+            <p><strong>Pertanyaan Lisan #${i+1}:</strong> ${s.q}</p>
+            <p style="color: #059669; font-size: 0.85rem; margin-bottom: 0.5rem;"><strong>Panduan Jawaban:</strong> ${s.k}</p>
+            <div class="form-group" style="margin-bottom: 0.5rem;">
+              <label style="font-size: 0.8rem; color: var(--secondary);">Note / Catatan Jawaban Peserta (Oleh Asesor):</label>
+              <textarea id="note-lisan-${s.id}" rows="2" placeholder="Tuliskan poin-poin jawaban yang disampaikan peserta secara langsung..."></textarea>
+            </div>
+            <div class="form-group" style="max-width: 200px; margin-bottom:0;">
+              <label style="font-size: 0.8rem;">Poin Nilai Lisan (Maks: ${s.poin}):</label>
+              <input type="number" id="score-lisan-${s.id}" min="0" max="${s.poin}" value="0" required oninput="hitungTotalNilai()">
+            </div>
+          </div>
+        `;
+      });
+
+      html += `<h4 style="margin: 1rem 0 0.5rem 0; color: var(--primary-dark);">3. Penilaian Observasi & SOP:</h4>`;
+
+      appData.soalObs.filter(s => s.jenjang === p.ujian).forEach((s, i) => {
+        const ans = appData.jawabanPeserta.obs[s.id] || '-';
+        html += `
+          <div class="q-item">
+            <p><strong>SOP #${i+1}:</strong> ${s.q}</p>
+            <p style="color: #1e293b; margin: 0.3rem 0;"><strong>Catatan Peserta:</strong> ${ans}</p>
+            <p style="color: #059669; font-size: 0.85rem; margin-bottom: 0.5rem;"><strong>Ceklis Standar SOP:</strong> ${s.k}</p>
+            <div class="form-group" style="max-width: 200px; margin-bottom:0;">
+              <label style="font-size: 0.8rem;">Poin Nilai (Maks: ${s.poin}):</label>
+              <input type="number" id="score-obs-${s.id}" min="0" max="${s.poin}" value="0" required oninput="hitungTotalNilai()">
+            </div>
+          </div>
+        `;
+      });
+
+      html += `
+          <h4 style="margin: 1.5rem 0 0.5rem 0;">Kalkulasi Nilai Akhir & Rekomendasi:</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nilai Akhir Terhitung (Otomatis)</label>
+              <input type="number" id="eval-nilai-total" readonly value="0" style="background-color: #e2e8f0; font-weight: bold;">
+            </div>
+            <div class="form-group">
+              <label>Rekomendasi Status Kompetensi</label>
+              <select id="eval-status" required>
+                <option value="KOMPETEN">KOMPETEN</option>
+                <option value="BELUM KOMPETEN">BELUM KOMPETEN</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="nav-btn" style="margin-top: 0.5rem;">Simpan Nilai Akhir Peserta</button>
+        </form>
+      `;
+
+      container.innerHTML = html;
+
+      populateCertDropdown();
+      updateCertPreview();
+    }
+
+    function populateCertDropdown() {
+      const selectCert = document.getElementById('cert-select-peserta');
+      if(!selectCert) return;
+
+      let html = `<option value="">-- Pilih Peserta --</option>`;
+      appData.riwayatPeserta.forEach((r, idx) => {
+        const selected = (appData.configSertifikat.selectedPesertaIdx !== "" && parseInt(appData.configSertifikat.selectedPesertaIdx) === idx) ? "selected" : "";
+        html += `<option value="${idx}" ${selected}>${r.nama} (${r.ujian} - ${r.status})</option>`;
+      });
+
+      if (appData.currentPeserta && appData.nilaiAkhir && appData.riwayatPeserta.length === 0) {
+        html += `<option value="current" selected>${appData.currentPeserta.nama} - ${appData.currentPeserta.ujian}</option>`;
+      }
+
+      selectCert.innerHTML = html;
+      updateCertPreview();
+    }
+
+    function simpanNilaiAkhir(e) {
+      e.preventDefault();
+      const nilai = document.getElementById('eval-nilai-total').value;
+      const status = document.getElementById('eval-status').value;
+
+      appData.nilaiAkhir = { nilai, status };
+
+      const record = {
+        ...appData.currentPeserta,
+        nilai,
+        status,
+        tanggalUjian: new Date().toLocaleDateString('id-ID')
+      };
+
+      appData.riwayatPeserta.push(record);
+      appData.configSertifikat.selectedPesertaIdx = appData.riwayatPeserta.length - 1;
+      saveLocalStorage();
+      renderRiwayatTable();
+      populateCertDropdown();
+
+      alert(`Nilai akhir berhasil disimpan dan tercatat ke LocalStorage! (Total Nilai: ${nilai}, Status: ${status})`);
+
+      document.getElementById('p-hasil-content').innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+          <h3 style="color: var(--primary-dark);">Hasil Asesmen Telah Diterbitkan</h3>
+          <p style="margin-top: 0.5rem;">Nama Peserta: <strong>${appData.currentPeserta.nama}</strong></p>
+          <div style="font-size: 2rem; font-weight: bold; margin: 1rem 0;">Nilai Akhir: ${nilai}</div>
+          <span class="badge ${status === 'KOMPETEN' ? 'badge-success' : 'badge-warning'}" style="font-size: 1.2rem; padding: 0.5rem 1rem;">
+            ${status}
+          </span>
+        </div>
+      `;
+    }
+
+    function renderRiwayatTable() {
+      const tbody = document.getElementById('riwayat-tbody');
+      if(!tbody) return;
+
+      if(appData.riwayatPeserta.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #64748b;">Belum ada riwayat tersimpan.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = appData.riwayatPeserta.map((r, i) => `
+        <tr>
+          <td>${i+1}</td>
+          <td>${r.nama}</td>
+          <td>${r.nip}</td>
+          <td>${r.ujian}</td>
+          <td>${r.asesor}</td>
+          <td><strong>${r.nilai}</strong></td>
+          <td><span class="badge ${r.status === 'KOMPETEN' ? 'badge-success' : 'badge-warning'}">${r.status}</span></td>
+          <td>
+            <button class="btn-danger btn-sm" onclick="hapusRiwayat(${i})">Hapus</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function hapusRiwayat(idx) {
+      if(confirm('Hapus data riwayat peserta ini?')) {
+        appData.riwayatPeserta.splice(idx, 1);
+        if(appData.configSertifikat.selectedPesertaIdx == idx) {
+          appData.configSertifikat.selectedPesertaIdx = "";
+        }
+        saveLocalStorage();
+        renderRiwayatTable();
+        populateCertDropdown();
+      }
+    }
+
+    function downloadExcelReport() {
+      if(appData.riwayatPeserta.length === 0) {
+        alert('Belum ada data riwayat peserta untuk di-download!');
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "No,Nama Lengkap,NIP,Tanggal Lahir,Jenis Kelamin,Email,Asesor,Jenjang Ujian,Nilai Akhir,Status,Tanggal Asesmen\r\n";
+
+      appData.riwayatPeserta.forEach((r, idx) => {
+        const row = [
+          idx + 1,
+          `"${r.nama}"`,
+          `"${r.nip}"`,
+          r.tgl,
+          r.jk,
+          r.email,
+          `"${r.asesor}"`,
+          `"${r.ujian}"`,
+          r.nilai,
+          r.status,
+          r.tanggalUjian
+        ];
+        csvContent += row.join(",") + "\r\n";
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Laporan_E_Asesmen_RSUD_Pesanggrahan_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function updateCertPreview() {
+      const selectIdx = document.getElementById('cert-select-peserta').value;
+      let pName = "[ NAMA PESERTA ]";
+      let pLevel = "[ JENJANG KOMPETENSI: PK / BK ]";
+      let status = "KOMPETEN";
+
+      if (selectIdx !== "" && selectIdx !== "current" && appData.riwayatPeserta[selectIdx]) {
+        const selectedRecord = appData.riwayatPeserta[selectIdx];
+        pName = selectedRecord.nama;
+        pLevel = `Jenjang: ${selectedRecord.ujian}`;
+        status = selectedRecord.status;
+      } else if (selectIdx === "current" && appData.currentPeserta) {
+        pName = appData.currentPeserta.nama;
+        pLevel = `Jenjang: ${appData.currentPeserta.ujian}`;
+        status = appData.nilaiAkhir ? appData.nilaiAkhir.status : "KOMPETEN";
+      }
+
+      const direktur = document.getElementById('cert-direktur').value || "dr. Nama Direktur, MARS";
+      const tglVal = document.getElementById('cert-tgl').value;
+      
+      let formattedTgl = "-";
+      if(tglVal) {
+        const d = new Date(tglVal);
+        formattedTgl = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+
+      document.getElementById('cert-p-name').innerText = pName;
+      document.getElementById('cert-p-level').innerText = pLevel;
+      document.getElementById('cert-p-dir').innerText = direktur;
+      document.getElementById('cert-p-tgl').innerText = formattedTgl;
+
+      const statusEl = document.getElementById('cert-p-status');
+      statusEl.innerText = status;
+      if (status === 'KOMPETEN') {
+        statusEl.className = 'cert-status kompeten';
+      } else {
+        statusEl.className = 'cert-status tdk-kompeten';
+      }
+
+      saveLocalStorage();
+    }
+
+    function downloadSertifikatJPG() {
+      const selectIdx = document.getElementById('cert-select-peserta').value;
+      if (selectIdx === "") {
+        alert('Silakan pilih peserta terlebih dahulu untuk menerbitkan sertifikat.');
+        return;
+      }
+
+      const certElement = document.getElementById('cert-printable');
+      
+      html2canvas(certElement, { scale: 2 }).then(canvas => {
+        const imageURI = canvas.toDataURL("image/jpeg", 1.0);
+        const link = document.createElement('a');
+        link.href = imageURI;
+        
+        let namaFile = "Sertifikat_Kompetensi";
+        if (selectIdx !== "current" && appData.riwayatPeserta[selectIdx]) {
+          namaFile = `Sertifikat_${appData.riwayatPeserta[selectIdx].nama.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        } else if (appData.currentPeserta) {
+          namaFile = `Sertifikat_${appData.currentPeserta.nama.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        }
+
+        link.download = `${namaFile}.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }).catch(err => {
+        console.error("Gagal men-generate gambar sertifikat", err);
+        alert('Terjadi kesalahan saat mengunduh sertifikat.');
+      });
+    }
+
+    function simpanSertifikatToDrive() {
+      const selectIdx = document.getElementById('cert-select-peserta').value;
+      if(selectIdx === "") {
+        alert('Pilih peserta terlebih dahulu!');
+        return;
+      }
+      
+      let namaPeserta = "Peserta";
+      if (selectIdx !== "current" && appData.riwayatPeserta[selectIdx]) {
+        namaPeserta = appData.riwayatPeserta[selectIdx].nama;
+      } else if (appData.currentPeserta) {
+        namaPeserta = appData.currentPeserta.nama;
+      }
+      
+      alert(`Sertifikat atas nama ${namaPeserta} berhasil di-generate! Data dan sertifikat dialihkan/disimpan ke Google Drive Asesor:\n${DRIVE_FOLDER_URL}`);
+      window.open(DRIVE_FOLDER_URL, '_blank');
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
