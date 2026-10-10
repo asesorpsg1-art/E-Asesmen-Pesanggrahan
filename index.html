@@ -1,4 +1,4 @@
-<meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -528,6 +528,7 @@
 
   <script>
     const DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1ehJTMHKsXYU2L01tAYRP1DUP2BGl72gL?usp=drive_link";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwiZwYEcwh-_f7GHzCwiuUKaG5TALuDE5PQUSfDEKytGxjbR7tikYurwqCGevRJdjt_/exec";
 
     let appData = {
       activeUniqueCode: "",
@@ -559,7 +560,6 @@
       }
     };
 
-    // Load from LocalStorage if available
     function loadLocalStorage() {
       const savedData = localStorage.getItem('e_asesmen_pesanggrahan_data');
       if (savedData) {
@@ -579,7 +579,6 @@
     }
 
     function saveLocalStorage() {
-      // Perbarui konfigurasi sertifikat dari input form sebelum disimpan
       appData.configSertifikat.direktur = document.getElementById('cert-direktur').value;
       appData.configSertifikat.tanggal = document.getElementById('cert-tgl').value;
       appData.configSertifikat.selectedPesertaIdx = document.getElementById('cert-select-peserta').value;
@@ -596,11 +595,20 @@
     }
 
     function generateUniqueCode() {
-      // Generate 5 digit random number string
       const code = Math.floor(10000 + Math.random() * 90000).toString();
       appData.activeUniqueCode = code;
       saveLocalStorage();
       renderUniqueCodeDisplay();
+
+      if (SCRIPT_URL) {
+        fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "save_config", sheet: "Config", value: code })
+        }).catch(err => console.error("Gagal sinkronisasi online:", err));
+      }
+
       alert(`Kode unik ujian berhasil digenerate: ${code}\nBerikan kode ini kepada peserta untuk memulai ujian.`);
     }
 
@@ -657,7 +665,6 @@
       renderJenjangDropdowns();
       renderUniqueCodeDisplay();
       
-      // Isi form sertifikat dari LocalStorage jika ada
       document.getElementById('cert-direktur').value = appData.configSertifikat.direktur || "dr. Nama Direktur, MARS";
       if (appData.configSertifikat.tanggal) {
         document.getElementById('cert-tgl').value = appData.configSertifikat.tanggal;
@@ -836,12 +843,24 @@
       `).join('') : '<p style="color: #64748b; font-style: italic;">Tidak ada soal observasi untuk jenjang ini.</p>';
     }
 
-    function startAssessment(e) {
+    async function startAssessment(e) {
       e.preventDefault();
       
       const inputKodeUnik = document.getElementById('p-kode-unik').value.trim();
 
-      // Validasi kode unik
+      if (SCRIPT_URL) {
+        try {
+          const response = await fetch(`${SCRIPT_URL}?action=get&sheet=Config`);
+          const data = await response.json();
+          const activeConfig = data.find(item => item.key === "activeUniqueCode");
+          if (activeConfig) {
+            appData.activeUniqueCode = activeConfig.value;
+          }
+        } catch(err) {
+          console.log("Menggunakan cache lokal untuk kode unik");
+        }
+      }
+
       if (!appData.activeUniqueCode) {
         alert('Asesor belum men-generate kode unik ujian! Silakan hubungi asesor penguji Anda.');
         return;
@@ -1039,12 +1058,22 @@
       };
 
       appData.riwayatPeserta.push(record);
+
+      if (SCRIPT_URL) {
+        fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "save_riwayat", sheet: "Riwayat", ...record })
+        }).catch(err => console.error("Gagal simpan riwayat online:", err));
+      }
+
       appData.configSertifikat.selectedPesertaIdx = appData.riwayatPeserta.length - 1;
       saveLocalStorage();
       renderRiwayatTable();
       populateCertDropdown();
 
-      alert(`Nilai akhir berhasil disimpan dan tercatat ke LocalStorage! (Total Nilai: ${nilai}, Status: ${status})`);
+      alert(`Nilai akhir berhasil disimpan dan tercatat ke Spreadsheet! (Total Nilai: ${nilai}, Status: ${status})`);
 
       document.getElementById('p-hasil-content').innerHTML = `
         <div style="text-align: center; padding: 2rem;">
